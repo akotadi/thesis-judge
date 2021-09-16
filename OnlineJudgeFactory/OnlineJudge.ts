@@ -1,23 +1,12 @@
-import {
-  chromium,
-  ChromiumBrowser,
-  ChromiumBrowserContext,
-  Page,
-} from "playwright-chromium";
-import * as fs from "fs";
+import { chromium, ChromiumBrowser, ChromiumBrowserContext, Page } from 'playwright-chromium';
+import * as fs from 'fs';
 
-export type Language =
-  | "c"
-  | "cpp"
-  | "java"
-  | "python2"
-  | "python3"
-  | "javascript";
+export type Language = 'c' | 'cpp' | 'java' | 'python2' | 'python3' | 'javascript';
 
 export enum OnlineJudgeName {
-  codeforces = "codeforces",
-  hackerrank = "hackerrank",
-  kattis = "kattis",
+  codeforces = 'codeforces',
+  hackerrank = 'hackerrank',
+  kattis = 'kattis',
 }
 
 export interface ProblemVeredict {
@@ -35,11 +24,7 @@ export default abstract class OnlineJudge {
 
   abstract isLoggedIn(page: Page): Promise<boolean>;
   abstract login(): Promise<boolean>;
-  abstract uploadFile(
-    filePath: string,
-    page: Page,
-    programmingLangAlias: Language
-  ): Promise<boolean>;
+  abstract uploadFile(filePath: string, page: Page, programmingLangAlias: Language): Promise<boolean>;
   abstract getSubmissionVeredict(page: Page): Promise<ProblemVeredict>;
 
   // Read file that contains the information for the session
@@ -52,7 +37,7 @@ export default abstract class OnlineJudge {
     expires?: number;
     httpOnly?: boolean;
     secure?: boolean;
-    sameSite?: "Strict" | "Lax" | "None";
+    sameSite?: 'Strict' | 'Lax' | 'None';
   }> {
     const sessionString = fs.readFileSync(this.SESSION_PATH).toString();
     const parsedSession = JSON.parse(sessionString);
@@ -60,12 +45,10 @@ export default abstract class OnlineJudge {
   }
 
   // Add a saved session to the browser
-  async restoreSession(
-    browser: ChromiumBrowser
-  ): Promise<ChromiumBrowserContext> {
+  async restoreSession(browser: ChromiumBrowser): Promise<ChromiumBrowserContext> {
     const previousSession = fs.existsSync(this.SESSION_PATH);
     const context = await browser.newContext({
-      userAgent: "chrome",
+      userAgent: 'chrome',
       viewport: null,
     });
     if (previousSession) {
@@ -77,18 +60,11 @@ export default abstract class OnlineJudge {
   // Save the session in a file
   async saveSession(context: ChromiumBrowserContext): Promise<void> {
     const cookies = await context.cookies();
-    fs.writeFile(
-      this.SESSION_PATH,
-      JSON.stringify(cookies, null, 2),
-      async (err) => {
-        if (err) {
-          console.log(
-            "Session information could not be written in",
-            this.SESSION_PATH
-          );
-        }
+    fs.writeFile(this.SESSION_PATH, JSON.stringify(cookies, null, 2), async err => {
+      if (err) {
+        console.log('Session information could not be written in', this.SESSION_PATH);
       }
-    );
+    });
   }
 
   async closeAllOtherTabs(context: ChromiumBrowserContext): Promise<void> {
@@ -99,11 +75,7 @@ export default abstract class OnlineJudge {
   }
 
   // Submit a problem (file) to a judge
-  async submit(
-    filePath: string,
-    problemURL: string,
-    programmingLangAlias: Language
-  ): Promise<ProblemVeredict> {
+  async submit(filePath: string, problemURL: string, programmingLangAlias: Language): Promise<ProblemVeredict> {
     // headless : false to see the bot interacting with the browser
     const browser = await chromium.launch({ headless: true });
     const context = await this.restoreSession(browser);
@@ -117,9 +89,9 @@ export default abstract class OnlineJudge {
     } catch (e) {
       return {
         error: `Could not navigate to: ${problemURL} `,
-        problemStatus: "",
-        problemTime: "",
-        problemMemory: "",
+        problemStatus: '',
+        problemTime: '',
+        problemMemory: '',
       };
     }
 
@@ -137,28 +109,24 @@ export default abstract class OnlineJudge {
       } catch (e) {
         return {
           error: `Could not navigate to: ${problemURL} `,
-          problemStatus: "",
-          problemTime: "",
-          problemMemory: "",
+          problemStatus: '',
+          problemTime: '',
+          problemMemory: '',
         };
       }
     }
 
     if (loginSuccess) {
-      let resultUploadFile: boolean = await this.uploadFile(
-        filePath,
-        page,
-        programmingLangAlias
-      );
+      const resultUploadFile: boolean = await this.uploadFile(filePath, page, programmingLangAlias);
       if (!resultUploadFile) {
         return {
           error: `File was not loaded`,
-          problemStatus: "",
-          problemTime: "",
-          problemMemory: "",
+          problemStatus: '',
+          problemTime: '',
+          problemMemory: '',
         };
       } else {
-        let veredict: ProblemVeredict = await this.getSubmissionVeredict(page);
+        const veredict: ProblemVeredict = await this.getSubmissionVeredict(page);
         await this.saveSession(context);
         await browser.close();
         return veredict;
@@ -166,9 +134,9 @@ export default abstract class OnlineJudge {
     } else {
       return {
         error: `Could not login to the judge: ${this.ONLINE_JUDGE_NAME}`,
-        problemStatus: "",
-        problemTime: "",
-        problemMemory: "",
+        problemStatus: '',
+        problemTime: '',
+        problemMemory: '',
       };
     }
   }

@@ -2,23 +2,26 @@
   "name": "thesis-judge",
   "version": "0.1.0",
   "description": "",
-  "private": true,
   "scripts": {
     "devStart": "npx ts-node ./API/server.ts",
     "build": "tsc",
-    "lint": "eslint src/**/*.ts",
-    "format": "eslint src/**/*.ts --fix"
+    "lint": "eslint ./**/*.ts",
+    "format": "eslint ./**/*.ts --fix"
   },
   "license": "MIT",
   "devDependencies": {
     "@types/express": "^4.17.6",
     "@types/got": "^9.6.12",
+    "@types/node": "^16.9.1",
     "@typescript-eslint/eslint-plugin": "^4.31.1",
     "@typescript-eslint/parser": "^4.31.1",
     "dotenv": "^10.0.0",
     "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
     "express": "^4.17.1",
     "got": "^9.6.0",
+    "husky": "^7.0.2",
     "nodemon": "^2.0.12",
     "playwright": "^1.14.1",
     "playwright-chromium": "^1.9.1",
@@ -26,7 +29,9 @@
     "ts-node": "^10.2.1",
     "typescript": "^4.4.3"
   },
-  "dependencies": {
-    "eslint-plugin-prettier": "^4.0.0"
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn format && yarn lint"
+    }
   }
 }

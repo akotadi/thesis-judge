@@ -1,8 +1,8 @@
-import express from "express";
-import got from "got";
-import * as fs from "fs";
-import { submit } from "../Submit";
-import { ProblemVeredict } from "../OnlineJudgeFactory/OnlineJudge";
+import * as express from 'express';
+import * as got from 'got';
+import * as fs from 'fs';
+import { submit } from '../Submit';
+import { ProblemVeredict } from '../OnlineJudgeFactory/OnlineJudge';
 
 import {
   SupportedProgrammingLanguages,
@@ -12,7 +12,7 @@ import {
   SupportedOnlineJudges,
   ExamplesOnlineJudgeProblemURL,
   fileTermination,
-} from "./utils";
+} from './utils';
 const app = express();
 
 app.use(express.json());
@@ -29,13 +29,10 @@ async function problemExist(url: string): Promise<boolean> {
 }
 
 // Get all supported languages
-app.get("/languages", (req, res) => {
-  let supportedLanguages: Array<string> = [];
-  for (let languageRecord in SupportedProgrammingLanguages) {
-    let language =
-      SupportedProgrammingLanguages[
-        languageRecord as keyof typeof SupportedProgrammingLanguages
-      ];
+app.get('/languages', (_req, res) => {
+  const supportedLanguages: Array<string> = [];
+  for (const languageRecord in SupportedProgrammingLanguages) {
+    const language = SupportedProgrammingLanguages[languageRecord as keyof typeof SupportedProgrammingLanguages];
     supportedLanguages.push(language);
   }
   res.json({
@@ -45,13 +42,10 @@ app.get("/languages", (req, res) => {
 });
 
 // Get all supported online judges
-app.get("/judges", (req, res) => {
-  let supportedJudges: Array<string> = [];
-  for (let onlineJudgeRecord in SupportedOnlineJudges) {
-    let judge =
-      SupportedOnlineJudges[
-        onlineJudgeRecord as keyof typeof SupportedOnlineJudges
-      ];
+app.get('/judges', (_req, res) => {
+  const supportedJudges: Array<string> = [];
+  for (const onlineJudgeRecord in SupportedOnlineJudges) {
+    const judge = SupportedOnlineJudges[onlineJudgeRecord as keyof typeof SupportedOnlineJudges];
     supportedJudges.push(judge);
   }
   res.json({
@@ -60,20 +54,15 @@ app.get("/judges", (req, res) => {
   return;
 });
 
-app.post("/submit", async (req, res) => {
+app.post('/submit', async (req, res) => {
   const problemURL: string = req.body.problemURL;
   const langSolution: ProgrammingLanguage = req.body.langSolution;
   const solution: string = req.body.solution;
 
   // Check three parameters are sent
-  if (
-    problemURL === undefined ||
-    langSolution === undefined ||
-    solution === undefined
-  ) {
+  if (problemURL === undefined || langSolution === undefined || solution === undefined) {
     res.json({
-      message:
-        "Expected three parameters: [problemURL, langSolution, solution]",
+      message: 'Expected three parameters: [problemURL, langSolution, solution]',
     });
     return;
   }
@@ -100,7 +89,7 @@ app.post("/submit", async (req, res) => {
     judge = SupportedOnlineJudges.kattis;
   } else {
     res.json({
-      message: "Online judge not supported",
+      message: 'Online judge not supported',
     });
     return;
   }
@@ -111,12 +100,10 @@ app.post("/submit", async (req, res) => {
     if (await problemExist(problemURL)) {
       // Check if the solution is base64 encoded
       let sol: string = solution;
-      const base64_encoded =
-        "true" === req.query.base64_encoded?.toString().toLowerCase() ??
-        "false";
+      const base64_encoded = 'true' === req.query.base64_encoded?.toString().toLowerCase() ?? 'false';
       if (base64_encoded) {
-        var b64string = solution;
-        sol = Buffer.from(b64string, "base64").toString("utf-8");
+        const b64string = solution;
+        sol = Buffer.from(b64string, 'base64').toString('utf-8');
       }
 
       const fileSolutionPath = `solution.${fileTermination[langSolution]}`;
@@ -124,11 +111,7 @@ app.post("/submit", async (req, res) => {
       try {
         fs.writeFileSync(fileSolutionPath, sol);
 
-        let veredict: ProblemVeredict = await submit(
-          fileSolutionPath,
-          problemURL,
-          langSolution
-        );
+        const veredict: ProblemVeredict = await submit(fileSolutionPath, problemURL, langSolution);
 
         res.json({
           veredict: veredict,
@@ -151,12 +134,12 @@ app.post("/submit", async (req, res) => {
     res.json({
       message: `Problem URL does not match with a problem url pattern for ${judge}, examples [${ExamplesOnlineJudgeProblemURL[
         judge
-      ].join(", ")}]`,
+      ].join(', ')}]`,
     });
     return;
   }
 });
 
 app.listen(3000, () => {
-  console.log("server in port 3000");
+  console.log('server in port 3000');
 });
