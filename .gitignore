@@ -11,18 +11,29 @@
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
-
 # production
 /build
+dist/**/*
 
 # misc
 .DS_Store
-*.pem
 yarn.lock
-package.lock.json
+package-lock.json
+lib-cov
+*.pem
+*.seed
+*.log
+*.csv
+*.dat
+*.out
+*.pid
+*.gz
+*.swp
+
+pids
+logs
+results
+tmp
 
 # debug
 npm-debug.log*
@@ -36,8 +47,9 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-# vercel
-.vercel
-
 # vscode
 .vscode
+
+# OS metadata
+.DS_Store
+Thumbs.db
