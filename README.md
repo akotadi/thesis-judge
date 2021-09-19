@@ -15,7 +15,7 @@ API system to submit codes to online judges.
 
 ## Usage
 
-To run the app you need to create a **appconfig.json** in the root folder, this file should contain the following keys:
+To run the app you need to ```npx ts-node ./API/server.ts``` but first you need to create a file **appconfig.json** in the root folder, this file should contain the following keys:
 
 #### appconfig.json
 
