@@ -30,7 +30,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "yarn format && yarn lint"
+      "pre-commit": "$npm_execpath run format && $npm_execpath run lint"
     }
   }
 }
