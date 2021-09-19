@@ -1,7 +1,6 @@
 import { chromium, Page } from 'playwright-chromium';
 import OnlineJudge, { OnlineJudgeName, ProblemVeredict, Language } from './OnlineJudge';
-import * as dotenv from 'dotenv';
-dotenv.config();
+import * as appconfig from '../appconfig.json';
 
 // HTML indicators for veredicts finished execution(class)
 enum HackerrankFinishedExecutionIndicators {
@@ -20,13 +19,22 @@ const LanguageAlias: Record<Language, string> = {
 };
 
 export default class Hackerrank extends OnlineJudge {
-  readonly SESSION_PATH = 'hackerrank_session.json';
+  readonly SESSION_PATH : string;
   readonly ONLINE_JUDGE_NAME = OnlineJudgeName.hackerrank;
-  readonly LOGIN_URL = 'https://www.hackerrank.com/auth/login';
-  readonly VEREDICT_TIMEOUT = 20000;
+  readonly LOGIN_URL = "https://www.hackerrank.com/auth/login";
+  readonly VEREDICT_TIMEOUT = appconfig.veredictTimeOut * 1000;
+  readonly USERNAME : string;
+  readonly PASSWORD : string;
+
+  constructor(username: string, password: string){
+    super();
+    this.USERNAME = username;
+    this.PASSWORD = password;
+    this.SESSION_PATH = `${username}_hackerrank_session.json`;
+  }
 
   async isLoggedIn(page: Page): Promise<boolean> {
-    const querySelector = `text=${process.env.user1Nickname ?? ''}`;
+    const querySelector = `text=${this.USERNAME ?? ''}`;
     return (await page.$(querySelector)) !== null;
   }
 
@@ -38,15 +46,16 @@ export default class Hackerrank extends OnlineJudge {
     context.on('page', _ => this.closeAllOtherTabs(context));
     const pages = context.pages();
     const page = pages.length > 0 ? pages[0] : await context.newPage();
+    page.setDefaultTimeout(appconfig.actionsTimeOut * 1000);
 
     try {
       await page.goto(this.LOGIN_URL);
 
-      await page.fill('input[name="username"]', process.env.user1Nickname ?? '');
-      await page.fill('input[name="password"]', process.env.user1Password ?? '');
+      await page.fill('input[name="username"]', this.USERNAME ?? '');
+      await page.fill('input[name="password"]', this.PASSWORD ?? '');
       await page.check('input[class="checkbox-input"]');
       await page.click('button[class="ui-btn ui-btn-large ui-btn-primary auth-button ui-btn-styled"]');
-      await page.waitForSelector(`text=${process.env.user1Nickname ?? ''}`);
+      await page.waitForSelector(`text=${this.USERNAME ?? ''}`);
 
       await this.saveSession(context);
       await browser.close();

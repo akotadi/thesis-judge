@@ -1,8 +1,11 @@
 import * as express from 'express';
 import * as got from 'got';
 import * as fs from 'fs';
+import * as crypto from 'crypto';
 import { submit } from '../Submit';
 import { ProblemVeredict } from '../OnlineJudgeFactory/OnlineJudge';
+import { AccountAvailable, getAccountAvailable, JudgeAvailability } from './accountUtil';
+import * as appconfig from '../appconfig.json';
 
 import {
   SupportedProgrammingLanguages,
@@ -12,8 +15,11 @@ import {
   SupportedOnlineJudges,
   ExamplesOnlineJudgeProblemURL,
   fileTermination,
+  commentForLanguage,
 } from './utils';
 const app = express();
+const requireAuthentication =
+  appconfig['x-auth-token'] === undefined || appconfig['x-auth-token'] === '' ? false : true;
 
 app.use(express.json());
 
@@ -29,7 +35,11 @@ async function problemExist(url: string): Promise<boolean> {
 }
 
 // Get all supported languages
-app.get('/languages', (_req, res) => {
+app.get('/languages', (req, res) => {
+  const authHeader = req.headers['x-auth-token'];
+  if (requireAuthentication && authHeader === undefined) return res.sendStatus(401); //Unauthorized
+  if (requireAuthentication && authHeader !== appconfig['x-auth-token']) return res.sendStatus(403); // Forbidden
+
   const supportedLanguages: Array<string> = [];
   for (const languageRecord in SupportedProgrammingLanguages) {
     const language = SupportedProgrammingLanguages[languageRecord as keyof typeof SupportedProgrammingLanguages];
@@ -42,7 +52,11 @@ app.get('/languages', (_req, res) => {
 });
 
 // Get all supported online judges
-app.get('/judges', (_req, res) => {
+app.get('/judges', (req, res) => {
+  const authHeader = req.headers['x-auth-token'];
+  if (requireAuthentication && authHeader === undefined) return res.sendStatus(401); //Unauthorized
+  if (requireAuthentication && authHeader !== appconfig['x-auth-token']) return res.sendStatus(403); // Forbidden
+
   const supportedJudges: Array<string> = [];
   for (const onlineJudgeRecord in SupportedOnlineJudges) {
     const judge = SupportedOnlineJudges[onlineJudgeRecord as keyof typeof SupportedOnlineJudges];
@@ -55,6 +69,10 @@ app.get('/judges', (_req, res) => {
 });
 
 app.post('/submit', async (req, res) => {
+  const authHeader = req.headers['x-auth-token'];
+  if (requireAuthentication && authHeader === undefined) return res.sendStatus(401); //Unauthorized
+  if (requireAuthentication && authHeader !== appconfig['x-auth-token']) return res.sendStatus(403); // Forbidden
+
   const problemURL: string = req.body.problemURL;
   const langSolution: ProgrammingLanguage = req.body.langSolution;
   const solution: string = req.body.solution;
@@ -106,12 +124,35 @@ app.post('/submit', async (req, res) => {
         sol = Buffer.from(b64string, 'base64').toString('utf-8');
       }
 
-      const fileSolutionPath = `solution.${fileTermination[langSolution]}`;
+      // Trying to get an available account
+      let username: string;
+      let password: string;
+      let account: AccountAvailable;
 
       try {
-        fs.writeFileSync(fileSolutionPath, sol);
+        account = await getAccountAvailable(judge);
+        let user = appconfig.judgeAccounts[account.userID];
+        username = user.nickname;
+        password = user.password;
 
-        const veredict: ProblemVeredict = await submit(fileSolutionPath, problemURL, langSolution);
+      } catch (error) {
+        res.json({
+          message: `Service is busy, try again later.`,
+        });
+        return;
+      }
+
+      const fileSolutionPath = `${username}_solution_${judge}.${fileTermination[langSolution]}`;
+
+      try {
+        let fileHash: string = crypto.randomBytes(32).toString('hex');
+        let solutionFile: string = `${commentForLanguage[langSolution]}${fileHash}\n${sol}`;
+
+        fs.writeFileSync(fileSolutionPath, solutionFile);
+
+        const veredict: ProblemVeredict = await submit(username, password, fileSolutionPath, problemURL, langSolution);
+        // Make available the user
+        JudgeAvailability[judge][account.userID as keyof typeof JudgeAvailability] = true;
 
         res.json({
           veredict: veredict,
@@ -140,6 +181,6 @@ app.post('/submit', async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log('server in port 3000');
+app.listen(appconfig.port, () => {
+  console.log(`server in port ${appconfig.port}`);
 });

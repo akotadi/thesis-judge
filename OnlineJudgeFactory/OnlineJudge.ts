@@ -1,5 +1,6 @@
 import { chromium, ChromiumBrowser, ChromiumBrowserContext, Page } from 'playwright-chromium';
 import * as fs from 'fs';
+import * as appconfig from '../appconfig.json';
 
 export type Language = 'c' | 'cpp' | 'java' | 'python2' | 'python3' | 'javascript';
 
@@ -21,6 +22,8 @@ export default abstract class OnlineJudge {
   abstract readonly ONLINE_JUDGE_NAME: string;
   abstract readonly LOGIN_URL: string;
   abstract readonly VEREDICT_TIMEOUT: number;
+  abstract readonly USERNAME: string;
+  abstract readonly PASSWORD: string;
 
   abstract isLoggedIn(page: Page): Promise<boolean>;
   abstract login(): Promise<boolean>;
@@ -82,6 +85,7 @@ export default abstract class OnlineJudge {
 
     const pages = context.pages();
     const page = pages.length > 0 ? pages[0] : await context.newPage();
+    page.setDefaultTimeout(appconfig.actionsTimeOut * 1000);
 
     // Try to hit the problem URL
     try {

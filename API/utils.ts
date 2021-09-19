@@ -26,6 +26,15 @@ export const fileTermination: Record<ProgrammingLanguage, string> = {
   javascript: 'js',
 };
 
+export const commentForLanguage: Record<ProgrammingLanguage, string> = {
+  c: '//',
+  cpp: '//',
+  java: '//',
+  python2: '#',
+  python3: '#',
+  javascript: '//',
+}
+
 export const SupportedOnlineJudges: Record<OnlineJudge, OnlineJudge> = {
   codeforces: 'codeforces',
   hackerrank: 'hackerrank',
