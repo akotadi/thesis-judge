@@ -114,7 +114,7 @@ Body
 {
   "problemURL": "https://open.kattis.com/problems/hello",
   "langSolution": "python3",
-  "solution": "print("Hello World")"
+  "solution": "print('Hello World')"
 }
 ```
 *Note*: If the parameter **base64_encoded** is set to true, then the solution in the body must be base64 encoded.
