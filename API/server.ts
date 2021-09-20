@@ -1,7 +1,6 @@
 import * as express from 'express';
 import * as got from 'got';
 import * as fs from 'fs';
-import * as crypto from 'crypto';
 import { submit } from '../Submit';
 import { ProblemVeredict } from '../OnlineJudgeFactory/OnlineJudge';
 import { AccountAvailable, getAccountAvailable, JudgeAvailability } from './accountUtil';
@@ -23,6 +22,24 @@ const requireAuthentication =
 
 app.use(express.json());
 
+function authorization(req, res, next) {
+  const authHeader = req.headers['x-auth-token'];
+  if (requireAuthentication && authHeader === undefined) {
+    res.sendStatus(401); //Unauthorized
+    res.okAuthorization = false;
+    next();
+    return;
+  }
+  if (requireAuthentication && authHeader !== appconfig['x-auth-token']) {
+    res.sendStatus(403); // Forbidden
+    res.okAuthorization = false;
+    next();
+    return;
+  }
+  res.okAuthorization = true;
+  next();
+}
+
 async function problemExist(url: string): Promise<boolean> {
   try {
     const response = await got.get(url);
@@ -35,11 +52,8 @@ async function problemExist(url: string): Promise<boolean> {
 }
 
 // Get all supported languages
-app.get('/languages', (req, res) => {
-  const authHeader = req.headers['x-auth-token'];
-  if (requireAuthentication && authHeader === undefined) return res.sendStatus(401); //Unauthorized
-  if (requireAuthentication && authHeader !== appconfig['x-auth-token']) return res.sendStatus(403); // Forbidden
-
+app.get('/languages', authorization, (_req, res) => {
+  if (res['okAuthorization'] === undefined || res['okAuthorization'] === false) return;
   const supportedLanguages: Array<string> = [];
   for (const languageRecord in SupportedProgrammingLanguages) {
     const language = SupportedProgrammingLanguages[languageRecord as keyof typeof SupportedProgrammingLanguages];
@@ -52,11 +66,8 @@ app.get('/languages', (req, res) => {
 });
 
 // Get all supported online judges
-app.get('/judges', (req, res) => {
-  const authHeader = req.headers['x-auth-token'];
-  if (requireAuthentication && authHeader === undefined) return res.sendStatus(401); //Unauthorized
-  if (requireAuthentication && authHeader !== appconfig['x-auth-token']) return res.sendStatus(403); // Forbidden
-
+app.get('/judges', authorization, (_req, res) => {
+  if (res['okAuthorization'] === undefined || res['okAuthorization'] === false) return;
   const supportedJudges: Array<string> = [];
   for (const onlineJudgeRecord in SupportedOnlineJudges) {
     const judge = SupportedOnlineJudges[onlineJudgeRecord as keyof typeof SupportedOnlineJudges];
@@ -68,19 +79,16 @@ app.get('/judges', (req, res) => {
   return;
 });
 
-app.post('/submit', async (req, res) => {
-  const authHeader = req.headers['x-auth-token'];
-  if (requireAuthentication && authHeader === undefined) return res.sendStatus(401); //Unauthorized
-  if (requireAuthentication && authHeader !== appconfig['x-auth-token']) return res.sendStatus(403); // Forbidden
-
+app.post('/submit', authorization, async (req, res) => {
+  if (res['okAuthorization'] === undefined || res['okAuthorization'] === false) return;
   const problemURL: string = req.body.problemURL;
-  const langSolution: ProgrammingLanguage = req.body.langSolution;
+  const langSolution: ProgrammingLanguage = req.body.langSolution.toLowerCase();
   const solution: string = req.body.solution;
 
   // Check three parameters are sent
   if (problemURL === undefined || langSolution === undefined || solution === undefined) {
     res.json({
-      message: 'Expected three parameters: [problemURL, langSolution, solution]',
+      message: 'Expected three propierties in body: {problemURL : "", langSolution : "", solution : ""}',
     });
     return;
   }
@@ -121,6 +129,13 @@ app.post('/submit', async (req, res) => {
       const base64_encoded = 'true' === req.query.base64_encoded?.toString().toLowerCase() ?? 'false';
       if (base64_encoded) {
         const b64string = solution;
+        const base64regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
+        if (!base64regex.test(b64string)) {
+          res.json({
+            message: `The solution is not a valid base64 string.`,
+          });
+          return;
+        }
         sol = Buffer.from(b64string, 'base64').toString('utf-8');
       }
 
@@ -131,10 +146,9 @@ app.post('/submit', async (req, res) => {
 
       try {
         account = await getAccountAvailable(judge);
-        let user = appconfig.judgeAccounts[account.userID];
+        const user = appconfig.judgeAccounts[account.userID];
         username = user.nickname;
         password = user.password;
-
       } catch (error) {
         res.json({
           message: `Service is busy, try again later.`,
@@ -145,8 +159,8 @@ app.post('/submit', async (req, res) => {
       const fileSolutionPath = `${username}_solution_${judge}.${fileTermination[langSolution]}`;
 
       try {
-        let fileHash: string = crypto.randomBytes(32).toString('hex');
-        let solutionFile: string = `${commentForLanguage[langSolution]}${fileHash}\n${sol}`;
+        const fileHash = new Date().valueOf();
+        const solutionFile = `${commentForLanguage[langSolution]}${fileHash}\n${sol}`;
 
         fs.writeFileSync(fileSolutionPath, solutionFile);
 

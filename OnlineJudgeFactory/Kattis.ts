@@ -23,14 +23,14 @@ const LanguageAlias: Record<Language, string> = {
 };
 
 export default class Kattis extends OnlineJudge {
-  readonly SESSION_PATH : string;
+  readonly SESSION_PATH: string;
   readonly ONLINE_JUDGE_NAME = OnlineJudgeName.kattis;
-  readonly LOGIN_URL = "https://open.kattis.com/login/email";
+  readonly LOGIN_URL = 'https://open.kattis.com/login/email';
   readonly VEREDICT_TIMEOUT = appconfig.veredictTimeOut * 1000;
-  readonly USERNAME : string;
-  readonly PASSWORD : string;
+  readonly USERNAME: string;
+  readonly PASSWORD: string;
 
-  constructor(username: string, password: string){
+  constructor(username: string, password: string) {
     super();
     this.USERNAME = username;
     this.PASSWORD = password;

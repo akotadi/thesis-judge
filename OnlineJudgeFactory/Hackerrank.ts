@@ -19,14 +19,14 @@ const LanguageAlias: Record<Language, string> = {
 };
 
 export default class Hackerrank extends OnlineJudge {
-  readonly SESSION_PATH : string;
+  readonly SESSION_PATH: string;
   readonly ONLINE_JUDGE_NAME = OnlineJudgeName.hackerrank;
-  readonly LOGIN_URL = "https://www.hackerrank.com/auth/login";
+  readonly LOGIN_URL = 'https://www.hackerrank.com/auth/login';
   readonly VEREDICT_TIMEOUT = appconfig.veredictTimeOut * 1000;
-  readonly USERNAME : string;
-  readonly PASSWORD : string;
+  readonly USERNAME: string;
+  readonly PASSWORD: string;
 
-  constructor(username: string, password: string){
+  constructor(username: string, password: string) {
     super();
     this.USERNAME = username;
     this.PASSWORD = password;
