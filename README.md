@@ -2,7 +2,7 @@
 
 [![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/tterb/atomic-design-ui/blob/master/LICENSEs)
 
-API system to submit codes to online judges.
+API system to submit code to online judges.
 
 ## Authors
 
@@ -13,7 +13,7 @@ API system to submit codes to online judges.
 
 [MIT](https://choosealicense.com/licenses/mit/)
 
-## Usage
+## Setup
 
 To run the app you need to ```npx ts-node ./API/server.ts``` but first you need to create a file **appconfig.json** in the root folder, this file should contain the following keys:
 
@@ -73,3 +73,48 @@ The **nickname** that is specified in every judgeAccount, should be a unique ide
 ![Hackerrank Login](img/hackerrankLogin.PNG)
 - Kattis:
 ![Kattis Login](img/kattisLogin.PNG)
+
+## API Usage
+
+If in the configuration file the ***x-auth-token*** **is set** to something rather than empty string, then every request should provide that header with the token in order to get authorization to content.
+
+```
+x-auth-token: YOUR_CUSTOM_TOKEN
+```
+
+#### GET
+
+- Get supported Languages
+
+Endpoint
+```
+/languages
+```
+- Get supported Judges
+ 
+Endpoint
+```
+/judges
+```
+
+#### POST
+
+- Submit solution to an online judge
+
+Endpoint
+```
+/submit:base64_encoded={true | false}
+```
+Headers
+```
+Content-Type: application/json
+```
+Body
+```json
+{
+  "problemURL": "https://open.kattis.com/problems/hello",
+  "langSolution": "python3",
+  "solution": "print("Hello World")"
+}
+```
+*Note*: If the parameter **base64_encoded** is set to true, then the solution in the body must be base64 encoded.
