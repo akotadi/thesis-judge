@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "description": "",
   "scripts": {
-    "devStart": "npx ts-node ./API/server.ts",
+    "dev": "npx ts-node ./API/server.ts",
+    "start": "cross-env NODE_ENV=production node dist/API/server.js",
     "build": "tsc",
     "lint": "eslint ./**/*.ts",
     "format": "eslint ./**/*.ts --fix"
@@ -18,12 +19,8 @@
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^3.4.0",
-    "express": "^4.17.1",
-    "got": "^9.6.0",
     "husky": "^7.0.2",
     "nodemon": "^2.0.12",
-    "playwright": "^1.14.1",
-    "playwright-chromium": "^1.9.1",
     "prettier": "^2.4.0",
     "ts-node": "^10.2.1",
     "typescript": "^4.4.3"
@@ -32,5 +29,11 @@
     "hooks": {
       "pre-commit": "$npm_execpath run format && $npm_execpath run lint"
     }
+  },
+  "dependencies": {
+    "cross-env": "^7.0.3",
+    "express": "^4.17.1",
+    "got": "^9.6.0",
+    "playwright-chromium": "^1.9.1"
   }
 }
