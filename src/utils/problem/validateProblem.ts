@@ -1,4 +1,4 @@
-import got from 'got';
+import * as got from 'got';
 
 const validateProblem = async (url: string): Promise<boolean> => {
   try {
@@ -7,6 +7,7 @@ const validateProblem = async (url: string): Promise<boolean> => {
     const status = response.statusCode;
     return responseURL === url && status >= 200 && status <= 299;
   } catch (error) {
+    console.error(error);
     return false;
   }
 };
