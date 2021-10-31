@@ -3,9 +3,11 @@ export type ProgrammingLanguage = 'c' | 'cpp' | 'java' | 'python2' | 'python3' |
 
 // Regular expresion to test URL
 export const OnlineJudgesURLRegularExpression = {
-  codeforces: new RegExp(/(https:\/\/codeforces.com\/(contest|gym)\/\d+\/problem\/[A-Za-z])/),
-  hackerrank: new RegExp(/(https:\/\/www.hackerrank.com\/challenges\/\w+([\-]\w+)*\/problem)/),
-  kattis: new RegExp(/(https:\/\/open.kattis.com\/problems\/\w+)/),
+  codeforces: new RegExp(
+    /https:\/\/codeforces.com\/((contest|gym)\/\d+\/problem|(problemset\/problem\/\d+))\/([A-Za-z]|\d+)/,
+  ),
+  hackerrank: new RegExp(/https:\/\/www.hackerrank.com\/challenges\/\w+([\-]\w+)*\/problem/),
+  kattis: new RegExp(/https:\/\/open.kattis.com\/problems\/\w+/),
 };
 
 export const SupportedProgrammingLanguages: Record<ProgrammingLanguage, ProgrammingLanguage> = {
