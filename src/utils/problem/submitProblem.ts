@@ -1,12 +1,12 @@
-import OnlineJudgeFactory from './OnlineJudgeFactory/OnlineJudgeFactory';
-import { ProblemVeredict, Language } from './OnlineJudgeFactory/OnlineJudge';
+import OnlineJudgeFactory from '../../utils/judge/OnlineJudgeFactory/OnlineJudgeFactory';
+import { ProblemVeredict, SupportedProgrammingLanguages } from '../../utils/ts/types';
 
-export async function submit(
+export async function submitProblem(
   username: string,
   password: string,
   filePath: string,
   problemURL: string,
-  language: Language,
+  language: SupportedProgrammingLanguages,
 ): Promise<ProblemVeredict> {
   const oj = OnlineJudgeFactory.getOnlineJudge(username, password, problemURL);
   if (oj) {

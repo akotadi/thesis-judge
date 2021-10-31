@@ -1,6 +1,7 @@
 import { chromium, Page } from 'playwright-chromium';
-import OnlineJudge, { OnlineJudgeName, ProblemVeredict, Language } from './OnlineJudge';
-import * as appconfig from '../appconfig.json';
+import OnlineJudge from './OnlineJudge';
+import * as appconfig from '../../../config/appconfig.json';
+import { ProblemVeredict, ProgrammingLanguage, SupportedOnlineJudges } from '../../ts/types';
 
 // HTML indicators for veredicts finished execution(class)
 enum HackerrankFinishedExecutionIndicators {
@@ -9,7 +10,7 @@ enum HackerrankFinishedExecutionIndicators {
 }
 
 // Values for programming languages in SELECT element
-const LanguageAlias: Record<Language, string> = {
+const LanguageAlias: Record<ProgrammingLanguage, string> = {
   c: 'c',
   cpp: 'cpp',
   java: 'java',
@@ -20,7 +21,7 @@ const LanguageAlias: Record<Language, string> = {
 
 export default class Hackerrank extends OnlineJudge {
   readonly SESSION_PATH: string;
-  readonly ONLINE_JUDGE_NAME = OnlineJudgeName.hackerrank;
+  readonly ONLINE_JUDGE_NAME = SupportedOnlineJudges.hackerrank;
   readonly LOGIN_URL = 'https://www.hackerrank.com/auth/login';
   readonly VEREDICT_TIMEOUT = appconfig.veredictTimeOut * 1000;
   readonly USERNAME: string;
@@ -65,7 +66,7 @@ export default class Hackerrank extends OnlineJudge {
     }
   }
 
-  async uploadFile(filePath: string, page: Page, programmingLangAlias: Language): Promise<boolean> {
+  async uploadFile(filePath: string, page: Page, programmingLangAlias: ProgrammingLanguage): Promise<boolean> {
     try {
       await page.click('text=Upload Code as File');
       const confirmModal = await page.$('text=Attn: Upload file');
@@ -100,10 +101,10 @@ export default class Hackerrank extends OnlineJudge {
       //Wait at most 20 seconds for execution to be completed
       await page.waitForFunction(
         ({ finishedExecution, HackerrankFinishedExecutionIndicators }) => {
-          const veredictHTMLString = finishedExecution.innerHTML.toLowerCase();
+          const veredictHTMLString = finishedExecution?.innerHTML.toLowerCase();
           if (
-            veredictHTMLString.includes(HackerrankFinishedExecutionIndicators.ACCEPTED) ||
-            veredictHTMLString.includes(HackerrankFinishedExecutionIndicators.REJECTED)
+            veredictHTMLString?.includes(HackerrankFinishedExecutionIndicators.ACCEPTED) ||
+            veredictHTMLString?.includes(HackerrankFinishedExecutionIndicators.REJECTED)
           ) {
             return true;
           }

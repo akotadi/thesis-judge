@@ -1,21 +1,7 @@
 import { chromium, ChromiumBrowser, ChromiumBrowserContext, Page } from 'playwright-chromium';
 import * as fs from 'fs';
-import * as appconfig from '../appconfig.json';
-
-export type Language = 'c' | 'cpp' | 'java' | 'python2' | 'python3' | 'javascript';
-
-export enum OnlineJudgeName {
-  codeforces = 'codeforces',
-  hackerrank = 'hackerrank',
-  kattis = 'kattis',
-}
-
-export interface ProblemVeredict {
-  error: string;
-  problemStatus: string;
-  problemTime: string;
-  problemMemory: string;
-}
+import * as appconfig from '../../../config/appconfig.json';
+import { ProblemVeredict, ProgrammingLanguage } from '../../ts/types';
 
 export default abstract class OnlineJudge {
   abstract readonly SESSION_PATH: string;
@@ -27,7 +13,7 @@ export default abstract class OnlineJudge {
 
   abstract isLoggedIn(page: Page): Promise<boolean>;
   abstract login(): Promise<boolean>;
-  abstract uploadFile(filePath: string, page: Page, programmingLangAlias: Language): Promise<boolean>;
+  abstract uploadFile(filePath: string, page: Page, programmingLangAlias: ProgrammingLanguage): Promise<boolean>;
   abstract getSubmissionVeredict(page: Page): Promise<ProblemVeredict>;
 
   // Read file that contains the information for the session
@@ -78,7 +64,11 @@ export default abstract class OnlineJudge {
   }
 
   // Submit a problem (file) to a judge
-  async submit(filePath: string, problemURL: string, programmingLangAlias: Language): Promise<ProblemVeredict> {
+  async submit(
+    filePath: string,
+    problemURL: string,
+    programmingLangAlias: ProgrammingLanguage,
+  ): Promise<ProblemVeredict> {
     // headless : false to see the bot interacting with the browser
     const browser = await chromium.launch({ headless: true });
     const context = await this.restoreSession(browser);

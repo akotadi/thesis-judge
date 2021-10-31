@@ -1,88 +1,26 @@
-import * as express from 'express';
-import * as got from 'got';
+import { Request, Response, NextFunction } from 'express';
 import * as fs from 'fs';
-import { submit } from '../Submit';
-import { ProblemVeredict } from '../OnlineJudgeFactory/OnlineJudge';
-import { AccountAvailable, getAccountAvailable, JudgeAvailability } from './accountUtil';
-import * as appconfig from '../appconfig.json';
-
+import { ExamplesOnlineJudgeProblemURL, OnlineJudgesURLRegularExpression } from '../../utils/constants/judge';
+import problemExist from '../../utils/problem/validateProblem';
+import { AccountAvailable, getAccountAvailable } from '../../utils/account/accountAvailable';
+import { commentForLanguage, fileTermination } from '../../utils/constants/text';
 import {
-  SupportedProgrammingLanguages,
-  ProgrammingLanguage,
-  OnlineJudge,
-  OnlineJudgesURLRegularExpression,
+  AppConfiguration,
+  ProblemVeredict,
   SupportedOnlineJudges,
-  ExamplesOnlineJudgeProblemURL,
-  fileTermination,
-  commentForLanguage,
-} from './utils';
-const app = express();
-const requireAuthentication =
-  appconfig['x-auth-token'] === undefined || appconfig['x-auth-token'] === '' ? false : true;
+  SupportedProgrammingLanguages,
+} from '../../utils/ts/types';
+import { submitProblem } from '../../utils/problem/submitProblem';
+import { JudgeAvailability } from '../../utils/judge/judgeAvailable';
 
-app.use(express.json());
+import * as appconfig from '../../config/appconfig.json';
 
-function authorization(req, res, next) {
-  const authHeader = req.headers['x-auth-token'];
-  if (requireAuthentication && authHeader === undefined) {
-    res.sendStatus(401); //Unauthorized
-    res.okAuthorization = false;
-    next();
-    return;
-  }
-  if (requireAuthentication && authHeader !== appconfig['x-auth-token']) {
-    res.sendStatus(403); // Forbidden
-    res.okAuthorization = false;
-    next();
-    return;
-  }
-  res.okAuthorization = true;
-  next();
-}
+export const submit = async (req: Request, res: Response, _next: NextFunction): Promise<Response | undefined> => {
+  if (res.get('authorized') === undefined || res.get('authorized') === 'false') return;
 
-async function problemExist(url: string): Promise<boolean> {
-  try {
-    const response = await got.get(url);
-    const responseURL = response.url;
-    const status = response.statusCode;
-    return responseURL === url && status >= 200 && status <= 299;
-  } catch (error) {
-    return false;
-  }
-}
-
-// Get all supported languages
-app.get('/languages', authorization, (_req, res) => {
-  if (res['okAuthorization'] === undefined || res['okAuthorization'] === false) return;
-  const supportedLanguages: Array<string> = [];
-  for (const languageRecord in SupportedProgrammingLanguages) {
-    const language = SupportedProgrammingLanguages[languageRecord as keyof typeof SupportedProgrammingLanguages];
-    supportedLanguages.push(language);
-  }
-  res.json({
-    supportedLanguages: supportedLanguages,
-  });
-  return;
-});
-
-// Get all supported online judges
-app.get('/judges', authorization, (_req, res) => {
-  if (res['okAuthorization'] === undefined || res['okAuthorization'] === false) return;
-  const supportedJudges: Array<string> = [];
-  for (const onlineJudgeRecord in SupportedOnlineJudges) {
-    const judge = SupportedOnlineJudges[onlineJudgeRecord as keyof typeof SupportedOnlineJudges];
-    supportedJudges.push(judge);
-  }
-  res.json({
-    supportedJudges: supportedJudges,
-  });
-  return;
-});
-
-app.post('/submit', authorization, async (req, res) => {
-  if (res['okAuthorization'] === undefined || res['okAuthorization'] === false) return;
+  const appConfiguration: AppConfiguration = appconfig;
   const problemURL: string = req.body.problemURL;
-  const langSolution: ProgrammingLanguage = req.body.langSolution.toLowerCase();
+  const langSolution: SupportedProgrammingLanguages = req.body.langSolution.toLowerCase();
   const solution: string = req.body.solution;
 
   // Check three parameters are sent
@@ -103,7 +41,7 @@ app.post('/submit', authorization, async (req, res) => {
 
   // Check problem URL contains an online judge keyword
   let regexChecker: RegExp;
-  let judge: OnlineJudge;
+  let judge: SupportedOnlineJudges;
   if (problemURL.includes(SupportedOnlineJudges.codeforces)) {
     regexChecker = OnlineJudgesURLRegularExpression.codeforces;
     judge = SupportedOnlineJudges.codeforces;
@@ -146,7 +84,7 @@ app.post('/submit', authorization, async (req, res) => {
 
       try {
         account = await getAccountAvailable(judge);
-        const user = appconfig.judgeAccounts[account.userID];
+        const user = appConfiguration.judgeAccounts[account.userID];
         username = user.nickname;
         password = user.password;
       } catch (error) {
@@ -164,7 +102,13 @@ app.post('/submit', authorization, async (req, res) => {
 
         fs.writeFileSync(fileSolutionPath, solutionFile);
 
-        const veredict: ProblemVeredict = await submit(username, password, fileSolutionPath, problemURL, langSolution);
+        const veredict: ProblemVeredict = await submitProblem(
+          username,
+          password,
+          fileSolutionPath,
+          problemURL,
+          langSolution,
+        );
         // Make available the user
         JudgeAvailability[judge][account.userID as keyof typeof JudgeAvailability] = true;
 
@@ -193,8 +137,4 @@ app.post('/submit', authorization, async (req, res) => {
     });
     return;
   }
-});
-
-app.listen(appconfig.port, () => {
-  console.log(`server in port ${appconfig.port}`);
-});
+};
