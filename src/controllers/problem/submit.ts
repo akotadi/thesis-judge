@@ -7,6 +7,7 @@ import { commentForLanguage, fileTermination } from '../../utils/constants/text'
 import {
   AppConfiguration,
   ProblemVeredict,
+  SubmitRequestData,
   SupportedOnlineJudges,
   SupportedProgrammingLanguages,
 } from '../../utils/ts/types';
@@ -15,27 +16,24 @@ import { JudgeAvailability } from '../../utils/judge/judgeAvailable';
 
 import * as appconfig from '../../config/appconfig.json';
 
-export const submit = async (req: Request, res: Response, _next: NextFunction): Promise<Response | undefined> => {
+export const submit = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
   if (res.get('authorized') === undefined || res.get('authorized') === 'false') return;
 
+  const { problemURL, langSolution: langSolutionRaw, solution, isBase64 }: SubmitRequestData = req.body.input.args;
+
   const appConfiguration: AppConfiguration = appconfig;
-  const problemURL: string = req.body.problemURL;
-  const langSolution: SupportedProgrammingLanguages = req.body.langSolution.toLowerCase();
-  const solution: string = req.body.solution;
+  const langSolution: SupportedProgrammingLanguages = langSolutionRaw.toLowerCase() as SupportedProgrammingLanguages;
+  const base64_encoded = isBase64;
 
   // Check three parameters are sent
   if (problemURL === undefined || langSolution === undefined || solution === undefined) {
-    res.json({
-      message: 'Expected three propierties in body: {problemURL : "", langSolution : "", solution : ""}',
-    });
+    res.status(400).send('Expected three propierties in body: {problemURL : "", langSolution : "", solution : ""}');
     return;
   }
 
   // Check programming language is supported
   if (!Object.values(SupportedProgrammingLanguages).includes(langSolution)) {
-    res.json({
-      message: `Programming Language not suported, see /languages`,
-    });
+    res.status(404).send(`Programming Language not supported, see /v1/language`);
     return;
   }
 
@@ -52,9 +50,7 @@ export const submit = async (req: Request, res: Response, _next: NextFunction): 
     regexChecker = OnlineJudgesURLRegularExpression.kattis;
     judge = SupportedOnlineJudges.kattis;
   } else {
-    res.json({
-      message: 'Online judge not supported',
-    });
+    res.status(404).send(`Online judge not supported, see /v1/judge`);
     return;
   }
 
@@ -64,14 +60,11 @@ export const submit = async (req: Request, res: Response, _next: NextFunction): 
     if (await problemExist(problemURL)) {
       // Check if the solution is base64 encoded
       let sol: string = solution;
-      const base64_encoded = 'true' === req.query.base64_encoded?.toString().toLowerCase() ?? 'false';
       if (base64_encoded) {
         const b64string = solution;
         const base64regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
         if (!base64regex.test(b64string)) {
-          res.json({
-            message: `The solution is not a valid base64 string.`,
-          });
+          res.status(400).send(`The solution is not a valid base64 string.`);
           return;
         }
         sol = Buffer.from(b64string, 'base64').toString('utf-8');
@@ -88,9 +81,7 @@ export const submit = async (req: Request, res: Response, _next: NextFunction): 
         username = user.nickname;
         password = user.password;
       } catch (error) {
-        res.json({
-          message: `Service is busy, try again later.`,
-        });
+        res.status(503).send(`Service is busy, try again later.`);
         return;
       }
 
@@ -101,7 +92,12 @@ export const submit = async (req: Request, res: Response, _next: NextFunction): 
         const solutionFile = `${commentForLanguage[langSolution]}${fileHash}\n${sol}`;
 
         fs.writeFileSync(fileSolutionPath, solutionFile);
+      } catch (error) {
+        res.status(500).send(`There was a problem creating the solution file.`);
+        return;
+      }
 
+      try {
         const veredict: ProblemVeredict = await submitProblem(
           username,
           password,
@@ -109,32 +105,36 @@ export const submit = async (req: Request, res: Response, _next: NextFunction): 
           problemURL,
           langSolution,
         );
+
         // Make available the user
         JudgeAvailability[judge][account.userID as keyof typeof JudgeAvailability] = true;
 
-        res.json({
-          veredict: veredict,
-        });
+        res.json(veredict);
+      } catch (error) {
+        res.status(500).send(`There was a problem submitting the solution file`);
+        return;
+      }
 
+      try {
         fs.unlinkSync(fileSolutionPath);
       } catch (error) {
-        res.json({
-          message: `There was a problem creating or deleting the solution file`,
-        });
+        res.status(500).send(`There was a problem deleting the solution file.`);
+        return;
       }
+
       return;
     } else {
-      res.json({
-        message: `The problem do not exist in ${judge}`,
-      });
+      res.status(404).send(`The problem url do not exist in ${judge}`);
       return;
     }
   } else {
-    res.json({
-      message: `Problem URL does not match with a problem url pattern for ${judge}, examples [${ExamplesOnlineJudgeProblemURL[
-        judge
-      ].join(', ')}]`,
-    });
+    res
+      .status(400)
+      .send(
+        `Problem URL does not match with a problem url pattern for ${judge}, examples [${ExamplesOnlineJudgeProblemURL[
+          judge
+        ].join(', ')}]`,
+      );
     return;
   }
 };

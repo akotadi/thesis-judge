@@ -8,7 +8,7 @@ const validateProblem = async (url: string): Promise<boolean> => {
     return responseURL === url && status >= 200 && status <= 299;
   } catch (error) {
     console.error(error);
-    return false;
+    throw error;
   }
 };
 

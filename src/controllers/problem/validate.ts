@@ -3,7 +3,7 @@ import { OnlineJudgesURLRegularExpression } from '../../utils/constants/judge';
 import problemExist from '../../utils/problem/validateProblem';
 import { SupportedOnlineJudges } from '../../utils/ts/types';
 
-export const validate = async (req: Request, res: Response, _next: NextFunction): Promise<Response | undefined> => {
+export const validate = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
   if (res.get('authorized') === undefined || res.get('authorized') === 'false') return;
 
   try {
@@ -13,17 +13,15 @@ export const validate = async (req: Request, res: Response, _next: NextFunction)
 
     if (judge in SupportedOnlineJudges && OnlineJudgesURLRegularExpression[judge].test(url)) {
       const isValid = await problemExist(url);
-      return res.json({
+      res.json({
         isValid: isValid,
       });
     } else {
-      return res.json({
+      res.json({
         isValid: false,
       });
     }
   } catch (err) {
-    return res.json({
-      isValid: false,
-    });
+    res.sendStatus(500);
   }
 };

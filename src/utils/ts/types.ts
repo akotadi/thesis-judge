@@ -38,3 +38,10 @@ export interface AppConfiguration {
     };
   };
 }
+
+export type SubmitRequestData = {
+  problemURL: string;
+  langSolution: SupportedProgrammingLanguages;
+  solution: string;
+  isBase64: boolean;
+};

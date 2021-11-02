@@ -8,18 +8,14 @@ const authorization = (req: Request, res: Response, next: NextFunction): void =>
   const authHeader = req.headers['x-auth-token'];
   if (requireAuthentication && authHeader === undefined) {
     res.sendStatus(401); //Unauthorized
-    res.setHeader('authorized', 'false');
-    next();
-    return;
+    return next();
   }
   if (requireAuthentication && authHeader !== appconfig['x-auth-token']) {
     res.sendStatus(403); // Forbidden
-    res.setHeader('authorized', 'false');
-    next();
-    return;
+    return next();
   }
   res.setHeader('authorized', 'true');
-  next();
+  return next();
 };
 
 export default authorization;
