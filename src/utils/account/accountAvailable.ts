@@ -1,20 +1,12 @@
-import { OnlineJudge } from './utils';
-import * as appconfig from '../appconfig.json';
-
-// True means available
-export const JudgeAvailability: Record<string, Record<string, boolean>> = {};
-appconfig.onlineJudges.forEach(judge => {
-  JudgeAvailability[judge] = {};
-  Object.keys(appconfig.judgeAccounts).forEach(account => {
-    JudgeAvailability[judge][account] = true;
-  });
-});
+import * as appconfig from '../../config/appconfig.json';
+import { JudgeAvailability } from '../../utils/judge/judgeAvailable';
+import { SupportedOnlineJudges } from '../../utils/ts/types';
 
 export interface AccountAvailable {
   userID: string;
 }
 
-export async function getAccountAvailable(judge: OnlineJudge): Promise<AccountAvailable> {
+export async function getAccountAvailable(judge: SupportedOnlineJudges): Promise<AccountAvailable> {
   return new Promise((resolve, reject) => {
     const TIME_OUT = appconfig.availableAccountTimeOut;
     const RETRY_EVERY_MS = 1000;

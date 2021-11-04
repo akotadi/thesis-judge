@@ -2,10 +2,25 @@
   "compilerOptions": {
     "target": "es2018",
     "module": "commonjs",
-    "outDir": "dist",
+    "baseUrl": "./src/",
+    "outDir": "./dist",
     "sourceMap": true,
-    "resolveJsonModule": true
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "alwaysStrict": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@config/*": ["config/*"],
+      "@controllers/*": ["controllers/*"],
+      "@middleware/*": ["middleware/*"],
+      "@routes/*": ["routes/*"],
+      "@utils/*": ["utils/*"]
+    }
   },
-  "include": ["./**/*.ts"],
+  "include": ["./src/**/*.tsx", "./src/**/*.ts"],
   "exclude": ["node_modules"]
 }
