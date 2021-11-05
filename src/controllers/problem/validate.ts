@@ -21,7 +21,8 @@ export const validate = async (req: Request, res: Response, _next: NextFunction)
         isValid: false,
       });
     }
-  } catch (err) {
+  } catch (error) {
+    console.error(`[ProblemValidation Error]: Message: ${error}`);
     res.sendStatus(500);
   }
 };

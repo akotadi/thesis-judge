@@ -64,7 +64,8 @@ export default class Kattis extends OnlineJudge {
       await this.saveSession(context);
       await browser.close();
       return true;
-    } catch (e) {
+    } catch (error) {
+      console.error(`[KattisLogin Error]: Message: ${error}`);
       return false;
     }
   }
@@ -83,7 +84,8 @@ export default class Kattis extends OnlineJudge {
       await page.click('input[type="submit"]');
       await page.waitForLoadState('domcontentloaded');
       return true;
-    } catch (e) {
+    } catch (error) {
+      console.error(`[KattisUpload Error]: Message: ${error}`);
       return false;
     }
   }
@@ -110,7 +112,9 @@ export default class Kattis extends OnlineJudge {
             ) {
               return true;
             }
-          } catch (e) {}
+          } catch (error) {
+            console.error(`[KattisGetVeredict Error]: Message: ${error}`);
+          }
         },
         { table, KattisVeredicts },
         { timeout: this.VEREDICT_TIMEOUT },
@@ -126,7 +130,8 @@ export default class Kattis extends OnlineJudge {
         problemTime: (await time?.innerText()) ?? '',
         problemMemory: '',
       };
-    } catch (e) {
+    } catch (error) {
+      console.error(`[KattisGetSubmission Error]: Message: ${error}`);
       return {
         error: 'Could not get veredict',
         problemStatus: '',

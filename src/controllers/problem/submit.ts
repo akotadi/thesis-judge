@@ -81,6 +81,7 @@ export const submit = async (req: Request, res: Response, _next: NextFunction): 
         username = user.nickname;
         password = user.password;
       } catch (error) {
+        console.error(`[CheckAccount Error]: Message: ${error}`);
         res.status(503).send(`Service is busy, try again later.`);
         return;
       }
@@ -93,6 +94,7 @@ export const submit = async (req: Request, res: Response, _next: NextFunction): 
 
         fs.writeFileSync(fileSolutionPath, solutionFile);
       } catch (error) {
+        console.error(`[FileSync Error]: Message: ${error}`);
         res.status(500).send(`There was a problem creating the solution file.`);
         return;
       }
@@ -111,6 +113,7 @@ export const submit = async (req: Request, res: Response, _next: NextFunction): 
 
         res.json(veredict);
       } catch (error) {
+        console.error(`[ProblemSubmit Error]: Message: ${error}`);
         res.status(500).send(`There was a problem submitting the solution file`);
         return;
       }
@@ -118,6 +121,7 @@ export const submit = async (req: Request, res: Response, _next: NextFunction): 
       try {
         fs.unlinkSync(fileSolutionPath);
       } catch (error) {
+        console.error(`[FileSync Error]: Message: ${error}`);
         res.status(500).send(`There was a problem deleting the solution file.`);
         return;
       }

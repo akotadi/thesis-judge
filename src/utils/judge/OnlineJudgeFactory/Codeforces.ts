@@ -63,7 +63,8 @@ export default class Codeforces extends OnlineJudge {
       await this.saveSession(context);
       await browser.close();
       return true;
-    } catch (e) {
+    } catch (error) {
+      console.error(`[CodeforcesLogin Error]: Message: ${error}`);
       return false;
     }
   }
@@ -84,7 +85,8 @@ export default class Codeforces extends OnlineJudge {
       } else {
         return true;
       }
-    } catch (e) {
+    } catch (error) {
+      console.error(`[CodeforcesUpload Error]: Message: ${error}`);
       return false;
     }
   }
@@ -121,7 +123,8 @@ export default class Codeforces extends OnlineJudge {
         problemTime: (await time?.innerText()) ?? '',
         problemMemory: (await memory?.innerText()) ?? '',
       };
-    } catch (e) {
+    } catch (error) {
+      console.error(`[CodeforcesGetSubmission Error]: Message: ${error}`);
       return {
         error: 'Could not get veredict',
         problemStatus: '',

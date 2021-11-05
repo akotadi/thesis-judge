@@ -61,7 +61,8 @@ export default class Hackerrank extends OnlineJudge {
       await this.saveSession(context);
       await browser.close();
       return true;
-    } catch (e) {
+    } catch (error) {
+      console.error(`[HackerrankLogin Error]: Message: ${error}`);
       return false;
     }
   }
@@ -88,7 +89,8 @@ export default class Hackerrank extends OnlineJudge {
       await page.waitForLoadState('domcontentloaded');
       await page.click('text=Submit Code');
       return true;
-    } catch (e) {
+    } catch (error) {
+      console.error(`[HackerrankUpload Error]: Message: ${error}`);
       return false;
     }
   }
@@ -125,7 +127,8 @@ export default class Hackerrank extends OnlineJudge {
         problemTime: '',
         problemMemory: '',
       };
-    } catch (e) {
+    } catch (error) {
+      console.error(`[HackerrankGetSubmission Error]: Message: ${error}`);
       return {
         error: 'Could not get veredict',
         problemStatus: '',

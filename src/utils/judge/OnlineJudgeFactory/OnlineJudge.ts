@@ -80,7 +80,8 @@ export default abstract class OnlineJudge {
     // Try to hit the problem URL
     try {
       await page.goto(problemURL);
-    } catch (e) {
+    } catch (error) {
+      console.error(`[OnlineJudgeGoto Error]: Message: ${error}`);
       return {
         error: `Could not navigate to: ${problemURL} `,
         problemStatus: '',
@@ -100,9 +101,10 @@ export default abstract class OnlineJudge {
         await context.addCookies(this.getSession());
         await page.goto(problemURL);
         loginSuccess = await this.isLoggedIn(page);
-      } catch (e) {
+      } catch (error) {
+        console.error(`[OnlineJudgeLogin Error]: Message: ${error}`);
         return {
-          error: `Could not navigate to: ${problemURL} `,
+          error: `Could not navigate to: ${problemURL}, while login `,
           problemStatus: '',
           problemTime: '',
           problemMemory: '',
