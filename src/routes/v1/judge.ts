@@ -5,6 +5,6 @@ import authorization from '../../middleware/authorization';
 
 const router = Router();
 
-router.get('/', authorization, list);
+router.post('/', authorization, list);
 
 export default router;
