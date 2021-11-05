@@ -7,6 +7,7 @@ const validateProblem = async (url: string): Promise<boolean> => {
     const status = response.statusCode;
     return responseURL === url && status >= 200 && status <= 299;
   } catch (error) {
+    console.error(`[ProblemValidation Error]: Message: ${error}`);
     console.error(error);
     throw error;
   }
