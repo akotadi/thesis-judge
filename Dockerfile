@@ -27,6 +27,8 @@ COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/package.json ./package.json
 
-EXPOSE 3000
+RUN npx playwright install
+
+EXPOSE 6789
 
 CMD ["yarn", "start"]
