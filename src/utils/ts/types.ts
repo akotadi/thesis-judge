@@ -26,7 +26,6 @@ export interface ProblemVeredict {
 
 export interface AppConfiguration {
   port: number | null | undefined;
-  testUrl: string;
   'x-auth-token': string | null | undefined;
   veredictTimeOut: number;
   actionsTimeOut: number;
@@ -46,10 +45,3 @@ export type SubmitRequestData = {
   solution: string;
   isBase64: boolean;
 };
-
-export type ProgrammingLanguageInfoType = {
-  name: string;
-  judge_id: number;
-};
-
-export type ProgrammingLanguageTestType = Record<SupportedProgrammingLanguages, ProgrammingLanguageInfoType>;
