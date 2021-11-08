@@ -23,7 +23,7 @@ export const submit = async (req: Request, res: Response, _next: NextFunction): 
 
   const appConfiguration: AppConfiguration = appconfig;
   const langSolution: SupportedProgrammingLanguages = langSolutionRaw.toLowerCase() as SupportedProgrammingLanguages;
-  const base64_encoded = isBase64;
+  const base64_encoded = isBase64 ?? false;
 
   // Check three parameters are sent
   if (problemURL === undefined || langSolution === undefined || solution === undefined) {
