@@ -1,6 +1,7 @@
 import { chromium, Page } from 'playwright-chromium';
-import OnlineJudge, { OnlineJudgeName, ProblemVeredict, Language } from './OnlineJudge';
-import * as appconfig from '../appconfig.json';
+import OnlineJudge from './OnlineJudge';
+import * as appconfig from '../../../config/appconfig.json';
+import { ProblemVeredict, ProgrammingLanguage, SupportedOnlineJudges } from '../../ts/types';
 
 // HTML indicators for veredicts finished execution(innerText)
 enum KattisVeredicts {
@@ -13,7 +14,7 @@ enum KattisVeredicts {
 }
 
 // Ids for programming languages in div dropdown element
-const LanguageAlias: Record<Language, string> = {
+const LanguageAlias: Record<ProgrammingLanguage, string> = {
   c: 'select2-result-label-3',
   cpp: 'select2-result-label-5',
   java: 'select2-result-label-11',
@@ -24,7 +25,7 @@ const LanguageAlias: Record<Language, string> = {
 
 export default class Kattis extends OnlineJudge {
   readonly SESSION_PATH: string;
-  readonly ONLINE_JUDGE_NAME = OnlineJudgeName.kattis;
+  readonly ONLINE_JUDGE_NAME = SupportedOnlineJudges.kattis;
   readonly LOGIN_URL = 'https://open.kattis.com/login/email';
   readonly VEREDICT_TIMEOUT = appconfig.veredictTimeOut * 1000;
   readonly USERNAME: string;
@@ -63,12 +64,13 @@ export default class Kattis extends OnlineJudge {
       await this.saveSession(context);
       await browser.close();
       return true;
-    } catch (e) {
+    } catch (error) {
+      console.error(`[KattisLogin Error]: Message: ${error}`);
       return false;
     }
   }
 
-  async uploadFile(filePath: string, page: Page, programmingLangAlias: Language): Promise<boolean> {
+  async uploadFile(filePath: string, page: Page, programmingLangAlias: ProgrammingLanguage): Promise<boolean> {
     try {
       await page.click('a[class="kat-button kat-primary small"]');
       await page.waitForSelector('input[type=file]');
@@ -82,7 +84,8 @@ export default class Kattis extends OnlineJudge {
       await page.click('input[type="submit"]');
       await page.waitForLoadState('domcontentloaded');
       return true;
-    } catch (e) {
+    } catch (error) {
+      console.error(`[KattisUpload Error]: Message: ${error}`);
       return false;
     }
   }
@@ -98,18 +101,20 @@ export default class Kattis extends OnlineJudge {
       await page.waitForFunction(
         ({ table, KattisVeredicts }) => {
           try {
-            const veredictHTMLString = table.childNodes[0].childNodes[3].textContent.toLowerCase();
+            const veredictHTMLString = table?.childNodes[0].childNodes[3].textContent?.toLowerCase();
             if (
-              veredictHTMLString.includes(KattisVeredicts.ACCEPTED) ||
-              veredictHTMLString.includes(KattisVeredicts.WRONG_ANSWER) ||
-              veredictHTMLString.includes(KattisVeredicts.COMPILATION_ERROR) ||
-              veredictHTMLString.includes(KattisVeredicts.RUN_TIME_ERROR) ||
-              veredictHTMLString.includes(KattisVeredicts.TIME_LIMIT_EXCEEDED) ||
-              veredictHTMLString.includes(KattisVeredicts.MEMORY_LIMIT_EXCEEDED)
+              veredictHTMLString?.includes(KattisVeredicts.ACCEPTED) ||
+              veredictHTMLString?.includes(KattisVeredicts.WRONG_ANSWER) ||
+              veredictHTMLString?.includes(KattisVeredicts.COMPILATION_ERROR) ||
+              veredictHTMLString?.includes(KattisVeredicts.RUN_TIME_ERROR) ||
+              veredictHTMLString?.includes(KattisVeredicts.TIME_LIMIT_EXCEEDED) ||
+              veredictHTMLString?.includes(KattisVeredicts.MEMORY_LIMIT_EXCEEDED)
             ) {
               return true;
             }
-          } catch (e) {}
+          } catch (error) {
+            console.error(`[KattisGetVeredict Error]: Message: ${error}`);
+          }
         },
         { table, KattisVeredicts },
         { timeout: this.VEREDICT_TIMEOUT },
@@ -125,7 +130,8 @@ export default class Kattis extends OnlineJudge {
         problemTime: (await time?.innerText()) ?? '',
         problemMemory: '',
       };
-    } catch (e) {
+    } catch (error) {
+      console.error(`[KattisGetSubmission Error]: Message: ${error}`);
       return {
         error: 'Could not get veredict',
         problemStatus: '',

@@ -6,5 +6,6 @@
   "tabWidth": 2,
   "arrowParens": "avoid",
   "objectPropertyNewline": "allowAllPropertiesOnSameLine",
-  "endOfLine": "auto"
+  "endOfLine": "auto",
+  "bracketSameLine": false
 }

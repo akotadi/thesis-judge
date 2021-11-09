@@ -1,6 +1,7 @@
 import { chromium, Page } from 'playwright-chromium';
-import OnlineJudge, { OnlineJudgeName, ProblemVeredict, Language } from './OnlineJudge';
-import * as appconfig from '../appconfig.json';
+import OnlineJudge from './OnlineJudge';
+import * as appconfig from '../../../config/appconfig.json';
+import { ProblemVeredict, ProgrammingLanguage, SupportedOnlineJudges } from '../../ts/types';
 
 // HTML indicators for veredicts (class, innerText)
 enum CodeForcesVeredicts {
@@ -10,7 +11,7 @@ enum CodeForcesVeredicts {
 }
 
 // Values for programming languages in SELECT element
-const LanguageAlias: Record<Language, string> = {
+const LanguageAlias: Record<ProgrammingLanguage, string> = {
   c: '43',
   cpp: '54',
   java: '60',
@@ -21,7 +22,7 @@ const LanguageAlias: Record<Language, string> = {
 
 export default class Codeforces extends OnlineJudge {
   readonly SESSION_PATH: string;
-  readonly ONLINE_JUDGE_NAME = OnlineJudgeName.codeforces;
+  readonly ONLINE_JUDGE_NAME = SupportedOnlineJudges.codeforces;
   readonly LOGIN_URL = 'https://codeforces.com/enter';
   readonly VEREDICT_TIMEOUT = appconfig.veredictTimeOut * 1000;
   readonly USERNAME: string;
@@ -62,12 +63,13 @@ export default class Codeforces extends OnlineJudge {
       await this.saveSession(context);
       await browser.close();
       return true;
-    } catch (e) {
+    } catch (error) {
+      console.error(`[CodeforcesLogin Error]: Message: ${error}`);
       return false;
     }
   }
 
-  async uploadFile(filePath: string, page: Page, programmingLangAlias: Language): Promise<boolean> {
+  async uploadFile(filePath: string, page: Page, programmingLangAlias: ProgrammingLanguage): Promise<boolean> {
     try {
       const inputFile = await page.$('input[type=file]');
       if (inputFile) await inputFile.setInputFiles(filePath);
@@ -83,7 +85,8 @@ export default class Codeforces extends OnlineJudge {
       } else {
         return true;
       }
-    } catch (e) {
+    } catch (error) {
+      console.error(`[CodeforcesUpload Error]: Message: ${error}`);
       return false;
     }
   }
@@ -97,11 +100,11 @@ export default class Codeforces extends OnlineJudge {
       //Wait at most 20 seconds for finally getting a status for the submission
       await page.waitForFunction(
         ({ status, CodeForcesVeredicts }) => {
-          const veredictHTMLString = status.innerHTML.toLowerCase();
+          const veredictHTMLString = status?.innerHTML.toLowerCase();
           if (
-            veredictHTMLString.includes(CodeForcesVeredicts.ACCEPTED) ||
-            veredictHTMLString.includes(CodeForcesVeredicts.REJECTED) ||
-            veredictHTMLString.includes(CodeForcesVeredicts.COMPILATION_ERROR)
+            veredictHTMLString?.includes(CodeForcesVeredicts.ACCEPTED) ||
+            veredictHTMLString?.includes(CodeForcesVeredicts.REJECTED) ||
+            veredictHTMLString?.includes(CodeForcesVeredicts.COMPILATION_ERROR)
           ) {
             return true;
           }
@@ -120,7 +123,8 @@ export default class Codeforces extends OnlineJudge {
         problemTime: (await time?.innerText()) ?? '',
         problemMemory: (await memory?.innerText()) ?? '',
       };
-    } catch (e) {
+    } catch (error) {
+      console.error(`[CodeforcesGetSubmission Error]: Message: ${error}`);
       return {
         error: 'Could not get veredict',
         problemStatus: '',
